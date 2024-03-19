@@ -58,6 +58,8 @@ function canvasPath(request) {
       return canvasPathGET(request);
     case "PUT":
       return canvasPathPUT(request);
+    case "POST":
+      return canvasPathPOST(request);
     default:
       throw new Error("invalid request");
   }
@@ -89,11 +91,19 @@ function canvasPathGET(request) {
   return `${baseURI}?per_page=${request.query.per_page}&use_verifiers=0${exclude}${sort}${search}`;
 }
 
-function canvasPathPUT(request) {
-  const moid = request.params.mediaObjectId;
-  const user_entered_title = request.query.user_entered_title;
+function canvasPathPOST(request) {
+  return request._parsedUrl.path == "/api/media_attachments"
+    ? "/api/v1/media_attachments"
+    : "/api/v1/media_objects";
+}
 
-  return `/api/v1/media_objects/${moid}?user_entered_title=${encodeURIComponent(
+function canvasPathPUT(request) {
+  const user_entered_title = request.query.user_entered_title;
+  const moid = request.params.mediaAttachmentId || request.params.mediaObjectId;
+  const path = request.params.mediaAttachmentId
+    ? "media_attachments"
+    : "media_objects";
+  return `/api/v1/${path}/${moid}?user_entered_title=${encodeURIComponent(
     user_entered_title
   )}`;
 }
@@ -125,6 +135,7 @@ function transformMediaObject(obj) {
     id: obj.media_id,
     title: obj.user_entered_title || obj.title,
     content_type: obj.media_type,
+    media_object: obj.media_object,
     date: obj.created_at,
     published: true, // TODO: is this true?
     embedded_iframe_url: obj.embedded_iframe_url

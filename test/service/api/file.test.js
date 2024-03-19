@@ -6,12 +6,26 @@ const { canvasPath, canvasResponseHandler } = require("../../../app/api/file");
 
 describe("File API", () => {
   describe("canvasPath()", () => {
+    const id = 47;
+    const params = { fileId: id };
+
     it("builds the correct path including file id", () => {
-      const id = 47;
-      const params = { fileId: id };
       const query = { per_page: 50 };
-      const expectedPath = `/api/v1/files/${id}?include[]=preview_url`;
+      const expectedPath = `/api/v1/files/${id}?include=preview_url`;
       assert.equal(canvasPath({ params, query }), expectedPath);
+    });
+
+    describe("when query params are given", () => {
+      const query = {
+        replacement_chain_context_type: "course",
+        replacement_chain_context_id: 2,
+        include: "blueprint_course_status"
+      };
+
+      it("includes the replacement context params in the query string", () => {
+        const expectedPath = `/api/v1/files/47?replacement_chain_context_type=course&replacement_chain_context_id=2&include=preview_url&include=blueprint_course_status`;
+        assert.equal(canvasPath({ params, query }), expectedPath);
+      });
     });
   });
 
@@ -51,7 +65,9 @@ describe("File API", () => {
           display_name: "Foo",
           filename: "Foo.pdf",
           preview_url: "someCANVADOCSurl",
-          url: "someurl"
+          url: "someurl",
+          restricted_by_master_course: "true",
+          is_master_course_child_content: "true"
         };
       });
 
@@ -66,7 +82,8 @@ describe("File API", () => {
               name: file.display_name,
               url: file.url,
               preview_url: file.preview_url,
-              embed: { type: "file" }
+              embed: { type: "file" },
+              restricted_by_master_course: "true"
             },
             val
           );
